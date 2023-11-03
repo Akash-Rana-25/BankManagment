@@ -3,7 +3,6 @@ using BankManagment_Infrastructure.Repository;
 using BankManagment_Infrastructure.UnitOfWork;
 using Moq;
 using Services;
-using Xunit;
 
 namespace BankManagement.UnitTests
 {
