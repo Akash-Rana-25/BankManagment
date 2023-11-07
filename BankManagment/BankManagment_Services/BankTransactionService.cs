@@ -2,7 +2,7 @@
 using BankManagment_Infrastructure.Repository;
 using BankManagment_Infrastructure.UnitOfWork;
 
-namespace Services
+namespace BankManagment_Services
 {
     public class BankTransactionService : IBankTransactionService
     {
@@ -22,13 +22,19 @@ namespace Services
             _bankAccountRepository = bankAccountRepository;
         }
 
-        public async Task<IEnumerable<BankTransaction>> GetAllBankTransactionsAsync()
+        public  Task<IEnumerable<BankTransaction>> GetAllBankTransactionsAsync()
         {
-            return await _bankTransactionRepository.GetAllAsync();
+            return _bankTransactionRepository.GetAllAsync();
         }
 
         public async Task CreateBankTransactionAsync(BankTransaction bankTransaction)
         {
+           
+            if (_bankTransactionRepository == null || _bankAccountPostingRepository == null || _bankAccountRepository == null)
+            {
+                throw new InvalidOperationException("Repositories not properly initialized.");
+            }
+
             await _bankTransactionRepository.AddAsync(bankTransaction);
 
             if (bankTransaction.Category == "Bank Interest" || bankTransaction.Category == "Bank Charges")
@@ -42,8 +48,8 @@ namespace Services
                     Category = bankTransaction.Category,
                     Amount = bankTransaction.Amount,
                     TransactionDate = bankTransaction.TransactionDate,
-                    PaymentMethodId = bankTransaction.PaymentMethodID,
-                    BankAccountId = bankTransaction.BankAccountID
+                    PaymentMethodID = bankTransaction.PaymentMethodID,
+                    BankAccountID = bankTransaction.BankAccountID
                 };
 
                 await _bankAccountPostingRepository.AddAsync(bankAccountPosting);

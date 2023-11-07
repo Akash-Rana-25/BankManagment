@@ -1,25 +1,21 @@
-﻿using BankManagment_Domain.Entity;
+﻿using AutoFixture;
+using BankManagment_Domain.Entity;
 using BankManagment_Infrastructure.Repository;
 using BankManagment_Infrastructure.UnitOfWork;
 using Moq;
+using BankManagment_Services;
 
-namespace BankManagement.UnitTests
+namespace BankManagement.Services.UnitTests
 {
-
-    public class BankAccountServiceTests
+    public class BankAccountServiceTests : BaseTest
     {
         [Fact]
         public async Task GetAllBankAccountsAsync_ReturnsBankAccounts()
         {
             // Arrange
             var mockRepository = new Mock<IRepository<BankAccount>>();
-            var bankAccounts = new List<BankAccount>
-        {
-            new BankAccount { Id = Guid.NewGuid(), FirstName = "John", LastName = "Doe" },
-            new BankAccount { Id = Guid.NewGuid(), FirstName = "Jane", LastName = "Smith" }
-        };
+            var bankAccounts = Fixture.CreateMany<BankAccount>().ToList();
             mockRepository.Setup(repo => repo.GetAllAsync()).ReturnsAsync(bankAccounts);
-
             var service = new BankAccountService(null, mockRepository.Object);
 
             // Act
@@ -27,7 +23,7 @@ namespace BankManagement.UnitTests
 
             // Assert
             Assert.NotNull(result);
-            Assert.Equal(2, result.Count());
+            Assert.Equal(bankAccounts.Count, result.Count());
         }
 
         [Fact]
@@ -35,8 +31,8 @@ namespace BankManagement.UnitTests
         {
             // Arrange
             var mockRepository = new Mock<IRepository<BankAccount>>();
-            var newBankAccount = new BankAccount { Id = Guid.NewGuid(), FirstName = "New", LastName = "Account" };
-
+            var newBankAccount = Fixture.Create<BankAccount>();
+            mockRepository.Setup(repo => repo.AddAsync(newBankAccount)).Returns(Task.CompletedTask);
             var service = new BankAccountService(null, mockRepository.Object);
 
             // Act
@@ -50,8 +46,8 @@ namespace BankManagement.UnitTests
         public async Task UpdateBankAccountAsync_UpdatesExistingBankAccount()
         {
             // Arrange
-            var accountId = Guid.NewGuid();
-            var updatedBankAccount = new BankAccount { Id = accountId, FirstName = "Updated", LastName = "Account" };
+            var accountId = Fixture.Create<Guid>();
+            var updatedBankAccount = Fixture.Create<BankAccount>();
 
             var mockRepository = new Mock<IRepository<BankAccount>>();
             mockRepository.Setup(repo => repo.GetByIdAsync(accountId)).ReturnsAsync(new BankAccount());
@@ -69,7 +65,7 @@ namespace BankManagement.UnitTests
         public async Task DeleteBankAccountAsync_DeletesExistingBankAccount()
         {
             // Arrange
-            var accountId = Guid.NewGuid();
+            var accountId = Fixture.Create<Guid>();
 
             var mockRepository = new Mock<IRepository<BankAccount>>();
             mockRepository.Setup(repo => repo.GetByIdAsync(accountId)).ReturnsAsync(new BankAccount());
@@ -83,15 +79,12 @@ namespace BankManagement.UnitTests
             mockRepository.Verify(repo => repo.DeleteAsync(It.IsAny<BankAccount>()), Times.Once);
         }
 
-      
-
         [Fact]
         public async Task SaveChangesAsync_ThrowsException_WhenSaveFails()
         {
             // Arrange
             var mockUnitOfWork = new Mock<IUnitOfWork>();
             mockUnitOfWork.Setup(uow => uow.SaveAsync()).ThrowsAsync(new Exception("Database save failed"));
-
             var service = new BankAccountService(mockUnitOfWork.Object, null);
 
             // Act and Assert

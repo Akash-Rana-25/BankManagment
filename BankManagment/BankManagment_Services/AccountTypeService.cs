@@ -1,13 +1,9 @@
 ﻿using BankManagment_Domain.Entity;
 using BankManagment_Infrastructure.Repository;
 using BankManagment_Infrastructure.UnitOfWork;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Services
+
+namespace BankManagment_Services
 {
     public class AccountTypeService : IAccountTypeService
     {
@@ -20,9 +16,9 @@ namespace Services
             _accountTypeRepository = accountTypeRepository;
         }
 
-        public async Task<IEnumerable<AccountType>> GetAllAccountTypesAsync()
+        public Task<IEnumerable<AccountType>> GetAllAccountTypesAsync()
         {
-            return await _accountTypeRepository.GetAllAsync();
+            return  _accountTypeRepository.GetAllAsync();
         }
 
         public async Task CreateAccountTypeAsync(AccountType accountType)

@@ -1,27 +1,27 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using AutoMapper;
+﻿using AutoMapper;
 using BankManagment_DTO;
 using BankManagment_Domain.Entity;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
-using Services;
+using BankManagment_Services;
+using AutoFixture;
+using BankManagement.Controller.UnitTests;
 
-namespace YourProject.Tests
+namespace BankManagement.UnitTests.ControllerUnitTests
 {
-    public class PaymentMethodControllerTests
+    public class PaymentMethodControllerTests : BaseTest
     {
         [Fact]
         public async Task GetPaymentMethods_ReturnsOkResultWithPaymentMethods()
         {
             // Arrange
+            var fixture = new Fixture();
             var mockPaymentMethodService = new Mock<IPaymentMethodService>();
             var mockMapper = new Mock<IMapper>();
             var controller = new PaymentMethodController(mockPaymentMethodService.Object, mockMapper.Object);
 
-            var paymentMethods = new List<PaymentMethod> { new PaymentMethod { Id = Guid.NewGuid(), Name = "Method 1" } };
-            var paymentMethodDTOs = new List<PaymentMethodDTO> { new PaymentMethodDTO { Id = Guid.NewGuid(), Name = "Method 1" } };
+            var paymentMethodDTOs = fixture.CreateMany<PaymentMethodDTO>().ToList();
+            var paymentMethods = fixture.CreateMany<PaymentMethod>().ToList();
 
             mockPaymentMethodService.Setup(service => service.GetAllPaymentMethodsAsync()).ReturnsAsync(paymentMethods);
             mockMapper.Setup(mapper => mapper.Map<List<PaymentMethodDTO>>(paymentMethods)).Returns(paymentMethodDTOs);
@@ -39,13 +39,16 @@ namespace YourProject.Tests
         public async Task UpdatePaymentMethod_ReturnsNoContentWhenModelStateIsValid()
         {
             // Arrange
-            var paymentMethodId = Guid.NewGuid();
+            var fixture = new Fixture();
+            var paymentMethodId = fixture.Create<Guid>();
             var mockPaymentMethodService = new Mock<IPaymentMethodService>();
             var mockMapper = new Mock<IMapper>();
             var controller = new PaymentMethodController(mockPaymentMethodService.Object, mockMapper.Object);
 
-            var updatedPaymentMethodDTO = new PaymentMethodDTO { Id = paymentMethodId, Name = "Updated Method" };
-            var updatedPaymentMethod = new PaymentMethod { Id = paymentMethodId, Name = "Updated Method" };
+            var updatedPaymentMethodDTO = fixture.Create<PaymentMethodDTO>();
+            updatedPaymentMethodDTO.Id = paymentMethodId;
+            var updatedPaymentMethod = fixture.Create<PaymentMethod>();
+            updatedPaymentMethod.Id = paymentMethodId;
 
             mockMapper.Setup(mapper => mapper.Map<PaymentMethod>(updatedPaymentMethodDTO)).Returns(updatedPaymentMethod);
             mockPaymentMethodService.Setup(service => service.UpdatePaymentMethodAsync(paymentMethodId, updatedPaymentMethod)).Returns(Task.CompletedTask);
@@ -59,11 +62,13 @@ namespace YourProject.Tests
             Assert.Equal(204, result.StatusCode);
         }
 
+
         [Fact]
         public async Task DeletePaymentMethod_ReturnsNoContent()
         {
             // Arrange
-            var paymentMethodId = Guid.NewGuid();
+            var fixture = new Fixture();
+            var paymentMethodId = fixture.Create<Guid>();
             var mockPaymentMethodService = new Mock<IPaymentMethodService>();
             var controller = new PaymentMethodController(mockPaymentMethodService.Object, null);
 
@@ -82,6 +87,7 @@ namespace YourProject.Tests
         public async Task CreatePaymentMethod_ReturnsBadRequestWhenModelStateIsInvalid()
         {
             // Arrange
+            var fixture = new Fixture();
             var controller = new PaymentMethodController(null, null);
             controller.ModelState.AddModelError("Name", "Name is required");
 
@@ -96,11 +102,12 @@ namespace YourProject.Tests
         public async Task UpdatePaymentMethod_ReturnsBadRequestWhenModelStateIsInvalid()
         {
             // Arrange
+            var fixture = new Fixture();
             var controller = new PaymentMethodController(null, null);
             controller.ModelState.AddModelError("Name", "Name is required");
 
             // Act
-            var result = await controller.UpdatePaymentMethod(Guid.NewGuid(), null);
+            var result = await controller.UpdatePaymentMethod(fixture.Create<Guid>(), null);
 
             // Assert
             Assert.IsType<BadRequestResult>(result);

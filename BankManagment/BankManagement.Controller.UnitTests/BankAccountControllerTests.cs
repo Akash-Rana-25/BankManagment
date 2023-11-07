@@ -1,28 +1,27 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using AutoFixture;
 using AutoMapper;
 using BankManagment_DTO;
 using BankManagment_Domain.Entity;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
-using Services;
-using BankManagment_WebApi.Controllers;
+using BankManagment_Services;
+using BankManagement.Controller.UnitTests;
 
-namespace YourProject.Tests
+namespace BankManagement.UnitTests.ControllerUnitTests
 {
-    public class BankAccountControllerTests
+    public class BankAccountControllerTests : BaseTest
     {
         [Fact]
         public async Task GetBankAccounts_ReturnsOkResultWithBankAccounts()
         {
             // Arrange
+            var fixture = new Fixture();
             var mockBankAccountService = new Mock<IBankAccountService>();
             var mockMapper = new Mock<IMapper>();
             var controller = new BankAccountController(mockBankAccountService.Object, mockMapper.Object);
 
-            var bankAccounts = new List<BankAccount> { new BankAccount { Id = Guid.NewGuid(), FirstName = "John", LastName = "Doe" } };
-            var bankAccountDTOs = new List<BankAccountDTO> { new BankAccountDTO { Id = Guid.NewGuid(), FirstName = "John", LastName = "Doe" } };
+            var bankAccountDTOs = fixture.CreateMany<BankAccountDTO>().ToList();
+            var bankAccounts = fixture.CreateMany<BankAccount>().ToList();
 
             mockBankAccountService.Setup(service => service.GetAllBankAccountsAsync()).ReturnsAsync(bankAccounts);
             mockMapper.Setup(mapper => mapper.Map<List<BankAccountDTO>>(bankAccounts)).Returns(bankAccountDTOs);
@@ -40,13 +39,16 @@ namespace YourProject.Tests
         public async Task UpdateBankAccount_ReturnsNoContentWhenModelStateIsValid()
         {
             // Arrange
-            var accountId = Guid.NewGuid();
+            var fixture = new Fixture();
+            var accountId = fixture.Create<Guid>();
             var mockBankAccountService = new Mock<IBankAccountService>();
             var mockMapper = new Mock<IMapper>();
             var controller = new BankAccountController(mockBankAccountService.Object, mockMapper.Object);
 
-            var updatedBankAccountDTO = new BankAccountDTO { Id = accountId, FirstName = "Updated", LastName = "Account" };
-            var updatedBankAccount = new BankAccount { Id = accountId, FirstName = "Updated", LastName = "Account" };
+            var updatedBankAccountDTO = fixture.Create<BankAccountDTO>();
+            updatedBankAccountDTO.Id = accountId;
+            var updatedBankAccount = fixture.Create<BankAccount>();
+            updatedBankAccount.Id = accountId;
 
             mockMapper.Setup(mapper => mapper.Map<BankAccount>(updatedBankAccountDTO)).Returns(updatedBankAccount);
             mockBankAccountService.Setup(service => service.UpdateBankAccountAsync(accountId, updatedBankAccount)).Returns(Task.CompletedTask);
@@ -64,7 +66,8 @@ namespace YourProject.Tests
         public async Task DeleteBankAccount_ReturnsNoContent()
         {
             // Arrange
-            var accountId = Guid.NewGuid();
+            var fixture = new Fixture();
+            var accountId = fixture.Create<Guid>();
             var mockBankAccountService = new Mock<IBankAccountService>();
             var controller = new BankAccountController(mockBankAccountService.Object, null);
 
@@ -83,6 +86,7 @@ namespace YourProject.Tests
         public async Task CreateBankAccount_ReturnsBadRequestWhenModelStateIsInvalid()
         {
             // Arrange
+            var fixture = new Fixture();
             var controller = new BankAccountController(null, null);
             controller.ModelState.AddModelError("FirstName", "FirstName is required");
 
@@ -97,11 +101,12 @@ namespace YourProject.Tests
         public async Task UpdateBankAccount_ReturnsBadRequestWhenModelStateIsInvalid()
         {
             // Arrange
+            var fixture = new Fixture();
             var controller = new BankAccountController(null, null);
             controller.ModelState.AddModelError("LastName", "LastName is required");
 
             // Act
-            var result = await controller.UpdateBankAccount(Guid.NewGuid(), null);
+            var result = await controller.UpdateBankAccount(fixture.Create<Guid>(), null);
 
             // Assert
             Assert.IsType<BadRequestResult>(result);

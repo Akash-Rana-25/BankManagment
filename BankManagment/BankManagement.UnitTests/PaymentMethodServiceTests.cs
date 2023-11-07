@@ -1,23 +1,19 @@
 ﻿using BankManagment_Domain.Entity;
 using BankManagment_Infrastructure.Repository;
-using Services;
+using BankManagment_Services;
 using Moq;
+using AutoFixture;
 
-namespace BankManagement.UnitTests
+namespace BankManagement.Services.UnitTests
 {
-
-    public class PaymentMethodServiceTests
+    public class PaymentMethodServiceTests : BaseTest
     {
         [Fact]
         public async Task GetAllPaymentMethodsAsync_ReturnsPaymentMethods()
         {
             // Arrange
             var mockPaymentMethodRepository = new Mock<IRepository<PaymentMethod>>();
-            var paymentMethods = new List<PaymentMethod>
-        {
-            new PaymentMethod { Id = Guid.NewGuid(), Name = "Cash" },
-            new PaymentMethod { Id = Guid.NewGuid(), Name = "Credit Card" }
-        };
+            var paymentMethods = Fixture.CreateMany<PaymentMethod>(2);
             mockPaymentMethodRepository.Setup(repo => repo.GetAllAsync()).ReturnsAsync(paymentMethods);
 
             var service = new PaymentMethodService(null, mockPaymentMethodRepository.Object);
@@ -35,7 +31,7 @@ namespace BankManagement.UnitTests
         {
             // Arrange
             var mockPaymentMethodRepository = new Mock<IRepository<PaymentMethod>>();
-            var newPaymentMethod = new PaymentMethod { Id = Guid.NewGuid(), Name = "New Payment Method" };
+            var newPaymentMethod = Fixture.Create<PaymentMethod>();
 
             mockPaymentMethodRepository.Setup(repo => repo.AddAsync(newPaymentMethod)).Returns(Task.CompletedTask);
 
@@ -47,17 +43,24 @@ namespace BankManagement.UnitTests
             // Assert
             mockPaymentMethodRepository.Verify(repo => repo.AddAsync(newPaymentMethod), Times.Once);
         }
-
         [Fact]
         public async Task UpdatePaymentMethodAsync_UpdatesExistingPaymentMethod()
         {
             // Arrange
-            var paymentMethodId = Guid.NewGuid();
-            var updatedPaymentMethod = new PaymentMethod { Id = paymentMethodId, Name = "Updated Payment Method" };
+            var paymentMethodId = Fixture.Create<Guid>();
+            var updatedPaymentMethod = Fixture.Build<PaymentMethod>()
+                .With(p => p.Name, "Updated Payment Method")
+                .Create();
 
             var mockPaymentMethodRepository = new Mock<IRepository<PaymentMethod>>();
+
+            // Set up the GetByIdAsync to return the updatedPaymentMethod with a matching Id
             mockPaymentMethodRepository.Setup(repo => repo.GetByIdAsync(paymentMethodId))
-                .ReturnsAsync(new PaymentMethod());
+                .ReturnsAsync(updatedPaymentMethod);
+
+            // Set up the UpdateAsync method to return a completed task
+            mockPaymentMethodRepository.Setup(repo => repo.UpdateAsync(updatedPaymentMethod))
+                .Returns(Task.CompletedTask);
 
             var service = new PaymentMethodService(null, mockPaymentMethodRepository.Object);
 
@@ -65,17 +68,20 @@ namespace BankManagement.UnitTests
             await service.UpdatePaymentMethodAsync(paymentMethodId, updatedPaymentMethod);
 
             // Assert
-            mockPaymentMethodRepository.Verify(repo => repo.UpdateAsync(It.IsAny<PaymentMethod>()), Times.Once);
+            mockPaymentMethodRepository.Verify(repo => repo.UpdateAsync(updatedPaymentMethod), Times.Once);
         }
+
+
 
         [Fact]
         public async Task DeletePaymentMethodAsync_DeletesExistingPaymentMethod()
         {
             // Arrange
-            var paymentMethodId = Guid.NewGuid();
+            var paymentMethodId = Fixture.Create<Guid>();
 
             var mockPaymentMethodRepository = new Mock<IRepository<PaymentMethod>>();
-            mockPaymentMethodRepository.Setup(repo => repo.GetByIdAsync(paymentMethodId)).ReturnsAsync(new PaymentMethod());
+            mockPaymentMethodRepository.Setup(repo => repo.GetByIdAsync(paymentMethodId))
+                .ReturnsAsync(Fixture.Create<PaymentMethod>());
 
             var service = new PaymentMethodService(null, mockPaymentMethodRepository.Object);
 
@@ -85,9 +91,5 @@ namespace BankManagement.UnitTests
             // Assert
             mockPaymentMethodRepository.Verify(repo => repo.DeleteAsync(It.IsAny<PaymentMethod>()), Times.Once);
         }
-
-
-     
     }
-
 }

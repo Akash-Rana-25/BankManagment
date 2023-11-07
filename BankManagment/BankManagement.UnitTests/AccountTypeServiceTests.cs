@@ -2,22 +2,20 @@
 using BankManagment_Infrastructure.Repository;
 using BankManagment_Infrastructure.UnitOfWork;
 using Moq;
-using Services;
+using BankManagment_Services;
+using AutoFixture;
 
-namespace BankManagement.UnitTests
+namespace BankManagement.Services.UnitTests
 {
-    public class AccountTypeServiceTests
+    public class AccountTypeServiceTests : BaseTest
     {
         [Fact]
         public async Task GetAllAccountTypesAsync_ReturnsAccountTypes()
         {
             // Arrange
+            var fixture = new Fixture();
             var mockRepository = new Mock<IRepository<AccountType>>();
-            var accountTypes = new List<AccountType>
-            {
-                new AccountType { Id = Guid.NewGuid(), Name = "Type 1" },
-                new AccountType { Id = Guid.NewGuid(), Name = "Type 2" }
-            };
+            var accountTypes = fixture.CreateMany<AccountType>().ToList();
             mockRepository.Setup(repo => repo.GetAllAsync()).ReturnsAsync(accountTypes);
 
             var service = new AccountTypeService(null, mockRepository.Object);
@@ -27,15 +25,16 @@ namespace BankManagement.UnitTests
 
             // Assert
             Assert.NotNull(result);
-            Assert.Equal(2, result.Count());
+            Assert.Equal(accountTypes.Count, result.Count());
         }
 
         [Fact]
         public async Task CreateAccountTypeAsync_CreatesNewAccountType()
         {
             // Arrange
+            var fixture = new Fixture();
             var mockRepository = new Mock<IRepository<AccountType>>();
-            var newAccountType = new AccountType { Id = Guid.NewGuid(), Name = "New Type" };
+            var newAccountType = fixture.Create<AccountType>();
 
             var service = new AccountTypeService(null, mockRepository.Object);
 
@@ -50,8 +49,9 @@ namespace BankManagement.UnitTests
         public async Task UpdateAccountTypeAsync_UpdatesExistingAccountType()
         {
             // Arrange
-            var accountId = Guid.NewGuid();
-            var updatedAccountType = new AccountType { Id = accountId, Name = "Updated Type" };
+            var fixture = new Fixture();
+            var accountId = fixture.Create<Guid>();
+            var updatedAccountType = fixture.Create<AccountType>();
 
             var mockRepository = new Mock<IRepository<AccountType>>();
             mockRepository.Setup(repo => repo.GetByIdAsync(accountId)).ReturnsAsync(new AccountType());
@@ -69,7 +69,8 @@ namespace BankManagement.UnitTests
         public async Task DeleteAccountTypeAsync_DeletesExistingAccountType()
         {
             // Arrange
-            var accountId = Guid.NewGuid();
+            var fixture = new Fixture();
+            var accountId = fixture.Create<Guid>();
 
             var mockRepository = new Mock<IRepository<AccountType>>();
             mockRepository.Setup(repo => repo.GetByIdAsync(accountId)).ReturnsAsync(new AccountType());
@@ -83,14 +84,11 @@ namespace BankManagement.UnitTests
             mockRepository.Verify(repo => repo.DeleteAsync(It.IsAny<AccountType>()), Times.Once);
         }
 
-      
-
-       
-
         [Fact]
         public async Task SaveChangesAsync_ThrowsException_WhenSaveFails()
         {
             // Arrange
+            var fixture = new Fixture();
             var mockUnitOfWork = new Mock<IUnitOfWork>();
             mockUnitOfWork.Setup(uow => uow.SaveAsync()).ThrowsAsync(new Exception("Database save failed"));
 
@@ -100,6 +98,5 @@ namespace BankManagement.UnitTests
             var exception = await Assert.ThrowsAsync<Exception>(() => service.SaveChangesAsync());
             Assert.Equal("Database save failed", exception.Message);
         }
-
     }
 }

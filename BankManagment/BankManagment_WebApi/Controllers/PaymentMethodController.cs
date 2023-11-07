@@ -2,8 +2,10 @@
 using BankManagment_Domain.Entity;
 using BankManagment_DTO;
 using Microsoft.AspNetCore.Mvc;
-using Services;
+using BankManagment_Services;
+using System.Web.Http;
 
+[RoutePrefix("api/paymentmethods")]
 public class PaymentMethodController : Controller
 {
     private readonly IPaymentMethodService _paymentMethodService;
@@ -15,7 +17,7 @@ public class PaymentMethodController : Controller
         _mapper = mapper;
     }
 
-    [HttpGet("paymentmethods")]
+    [Microsoft.AspNetCore.Mvc.HttpGet("paymentmethods")]
     public async Task<IActionResult> GetPaymentMethods()
     {
         var paymentMethods = await _paymentMethodService.GetAllPaymentMethodsAsync();
@@ -23,8 +25,8 @@ public class PaymentMethodController : Controller
         return Ok(paymentMethodDTOs);
     }
 
-    [HttpPost("paymentmethods")]
-    public async Task<IActionResult> CreatePaymentMethod([FromBody] PaymentMethodDTO paymentMethodDTO)
+    [Microsoft.AspNetCore.Mvc.HttpPost("paymentmethods")]
+    public async Task<IActionResult> CreatePaymentMethod([Microsoft.AspNetCore.Mvc.FromBody] PaymentMethodDTO paymentMethodDTO)
     {
         if (!ModelState.IsValid)
             return BadRequest();
@@ -38,8 +40,8 @@ public class PaymentMethodController : Controller
         return CreatedAtAction(nameof(GetPaymentMethods), new { id = createdDTO.Id }, createdDTO);
     }
 
-    [HttpPut("paymentmethods/{id}")]
-    public async Task<IActionResult> UpdatePaymentMethod(Guid id, [FromBody] PaymentMethodDTO updatedPaymentMethodDTO)
+    [Microsoft.AspNetCore.Mvc.HttpPut("paymentmethods/{id}")]
+    public async Task<IActionResult> UpdatePaymentMethod(Guid id, [Microsoft.AspNetCore.Mvc.FromBody] PaymentMethodDTO updatedPaymentMethodDTO)
     {
         if (!ModelState.IsValid || id != updatedPaymentMethodDTO.Id)
             return BadRequest();
@@ -52,7 +54,7 @@ public class PaymentMethodController : Controller
         return NoContent();
     }
 
-    [HttpDelete("paymentmethods/{id}")]
+    [Microsoft.AspNetCore.Mvc.HttpDelete("paymentmethods/{id}")]
     public async Task<IActionResult> DeletePaymentMethod(Guid id)
     {
         await _paymentMethodService.DeletePaymentMethodAsync(id);

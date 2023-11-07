@@ -2,7 +2,7 @@
 using BankManagment_Infrastructure.Repository;
 using BankManagment_Infrastructure.UnitOfWork;
 
-namespace Services
+namespace BankManagment_Services
 {
     public class PaymentMethodService : IPaymentMethodService
     {
@@ -15,9 +15,9 @@ namespace Services
             _paymentMethodRepository = paymentMethodRepository;
         }
 
-        public async Task<IEnumerable<PaymentMethod>> GetAllPaymentMethodsAsync()
+        public  Task<IEnumerable<PaymentMethod>> GetAllPaymentMethodsAsync()
         {
-            return await _paymentMethodRepository.GetAllAsync();
+            return _paymentMethodRepository.GetAllAsync();
         }
 
         public async Task CreatePaymentMethodAsync(PaymentMethod paymentMethod)

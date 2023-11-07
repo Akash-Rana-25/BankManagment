@@ -2,8 +2,11 @@
 using BankManagment_Domain.Entity;
 using BankManagment_DTO;
 using Microsoft.AspNetCore.Mvc;
-using Services;
+using BankManagment_Services;
+using System.Diagnostics;
+using System.Web.Http;
 
+[RoutePrefix("api/accounttypes")]
 public class AccountTypeController : Controller
 {
     private readonly IAccountTypeService _accountTypeService;
@@ -15,7 +18,7 @@ public class AccountTypeController : Controller
         _mapper = mapper;
     }
 
-    [HttpGet("accounttypes")]
+    [Microsoft.AspNetCore.Mvc.HttpGet("accounttypes")]
     public async Task<IActionResult> GetAccountTypes()
     {
         var accountTypes = await _accountTypeService.GetAllAccountTypesAsync();
@@ -23,8 +26,8 @@ public class AccountTypeController : Controller
         return Ok(accountTypeDTOs);
     }
 
-    [HttpPost("accounttypes")]
-    public async Task<IActionResult> CreateAccountType([FromBody] AccountTypeDTO accountTypeDTO)
+    [Microsoft.AspNetCore.Mvc.HttpPost("accounttypes")]
+    public async Task<IActionResult> CreateAccountType([Microsoft.AspNetCore.Mvc.FromBody] AccountTypeDTO accountTypeDTO)
     {
         if (!ModelState.IsValid)
             return BadRequest();
@@ -38,21 +41,38 @@ public class AccountTypeController : Controller
         return CreatedAtAction(nameof(GetAccountTypes), new { id = createdDTO.Id }, createdDTO);
     }
 
-    [HttpPut("accounttypes/{id}")]
-    public async Task<IActionResult> UpdateAccountType(Guid id, [FromBody] AccountTypeDTO updatedAccountTypeDTO)
+    [Microsoft.AspNetCore.Mvc.HttpPut("accounttypes/{id}")]
+    public async Task<IActionResult> UpdateAccountType(Guid id, [Microsoft.AspNetCore.Mvc.FromBody] AccountTypeDTO updatedAccountTypeDTO)
     {
-        if (!ModelState.IsValid || id != updatedAccountTypeDTO.Id)
+        Debug.WriteLine("UpdateAccountType called with id in Contoller: " + id);
+        Debug.WriteLine("Updated AccountTypeDTO: " + updatedAccountTypeDTO);
+
+        if (!ModelState.IsValid)
+        {
+            Debug.WriteLine("ModelState is not valid. Returning BadRequest.");
             return BadRequest();
+        }
+
+        if (id != updatedAccountTypeDTO.Id)
+        {
+            Debug.WriteLine("id does not match. Returning BadRequest.");
+            return BadRequest();
+        }
 
         var updatedAccountType = _mapper.Map<AccountType>(updatedAccountTypeDTO);
+
+        Debug.WriteLine("Mapped AccountType: " + updatedAccountType);
 
         await _accountTypeService.UpdateAccountTypeAsync(id, updatedAccountType);
         await _accountTypeService.SaveChangesAsync();
 
+        Debug.WriteLine("UpdateAccountTypeAsync and SaveChangesAsync completed.");
+
         return NoContent();
     }
 
-    [HttpDelete("accounttypes/{id}")]
+
+    [Microsoft.AspNetCore.Mvc.HttpDelete("accounttypes/{id}")]
     public async Task<IActionResult> DeleteAccountType(Guid id)
     {
         await _accountTypeService.DeleteAccountTypeAsync(id);

@@ -3,22 +3,25 @@ using BankManagment_DTO;
 using BankManagment_Domain.Entity;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
-using Services;
+using BankManagment_Services;
+using AutoFixture;
+using BankManagement.Controller.UnitTests;
 
-namespace YourProject.Tests
+namespace BankManagement.UnitTests.ControllerUnitTests
 {
-    public class BankTransactionsControllerTests
+    public class BankTransactionsControllerTests : BaseTest
     {
         [Fact]
         public async Task GetBankTransactions_ReturnsOkResultWithBankTransactions()
         {
             // Arrange
+            var fixture = new Fixture();
             var mockBankTransactionService = new Mock<IBankTransactionService>();
             var mockMapper = new Mock<IMapper>();
             var controller = new BankTransactionsController(mockBankTransactionService.Object, mockMapper.Object);
 
-            var bankTransactions = new List<BankTransaction> { new BankTransaction { Id = Guid.NewGuid(), TransactionPersonLastName = "Transaction 1" } };
-            var bankTransactionDTOs = new List<BankTransactionDTO> { new BankTransactionDTO { Id = Guid.NewGuid(), TransactionPersonLastName = "Transaction 1" } };
+            var bankTransactionDTOs = fixture.CreateMany<BankTransactionDTO>().ToList();
+            var bankTransactions = fixture.CreateMany<BankTransaction>().ToList();
 
             mockBankTransactionService.Setup(service => service.GetAllBankTransactionsAsync()).ReturnsAsync(bankTransactions);
             mockMapper.Setup(mapper => mapper.Map<List<BankTransactionDTO>>(bankTransactions)).Returns(bankTransactionDTOs);
@@ -31,17 +34,21 @@ namespace YourProject.Tests
             Assert.Equal(200, result.StatusCode);
             Assert.Same(bankTransactionDTOs, result.Value);
         }
+
         [Fact]
         public async Task UpdateBankTransaction_ReturnsNoContentWhenModelStateIsValid()
         {
             // Arrange
-            var transactionId = Guid.NewGuid();
+            var fixture = new Fixture();
+            var transactionId = fixture.Create<Guid>();
             var mockBankTransactionService = new Mock<IBankTransactionService>();
             var mockMapper = new Mock<IMapper>();
             var controller = new BankTransactionsController(mockBankTransactionService.Object, mockMapper.Object);
 
-            var updatedTransactionDTO = new BankTransactionDTO { Id = transactionId, TransactionPersonLastName = "Updated Transaction" };
-            var updatedTransaction = new BankTransaction { Id = transactionId, TransactionPersonLastName = "Updated Transaction" };
+            var updatedTransactionDTO = fixture.Create<BankTransactionDTO>();
+            updatedTransactionDTO.Id = transactionId;
+            var updatedTransaction = fixture.Create<BankTransaction>();
+            updatedTransaction.Id = transactionId;
 
             mockMapper.Setup(mapper => mapper.Map<BankTransaction>(updatedTransactionDTO)).Returns(updatedTransaction);
             mockBankTransactionService.Setup(service => service.UpdateBankTransactionAsync(transactionId, updatedTransaction)).Returns(Task.CompletedTask);
@@ -55,11 +62,13 @@ namespace YourProject.Tests
             Assert.Equal(204, result.StatusCode);
         }
 
+
         [Fact]
         public async Task DeleteBankTransaction_ReturnsNoContent()
         {
             // Arrange
-            var transactionId = Guid.NewGuid();
+            var fixture = new Fixture();
+            var transactionId = fixture.Create<Guid>();
             var mockBankTransactionService = new Mock<IBankTransactionService>();
             var controller = new BankTransactionsController(mockBankTransactionService.Object, null);
 
@@ -78,6 +87,7 @@ namespace YourProject.Tests
         public async Task CreateBankTransaction_ReturnsBadRequestWhenModelStateIsInvalid()
         {
             // Arrange
+            var fixture = new Fixture();
             var controller = new BankTransactionsController(null, null);
             controller.ModelState.AddModelError("TransactionPersonLastName", "TransactionPersonLastName is required");
 
@@ -92,11 +102,12 @@ namespace YourProject.Tests
         public async Task UpdateBankTransaction_ReturnsBadRequestWhenModelStateIsInvalid()
         {
             // Arrange
+            var fixture = new Fixture();
             var controller = new BankTransactionsController(null, null);
             controller.ModelState.AddModelError("TransactionPersonLastName", "TransactionPersonLastName is required");
 
             // Act
-            var result = await controller.UpdateBankTransaction(Guid.NewGuid(), null);
+            var result = await controller.UpdateBankTransaction(fixture.Create<Guid>(), null);
 
             // Assert
             Assert.IsType<BadRequestResult>(result);

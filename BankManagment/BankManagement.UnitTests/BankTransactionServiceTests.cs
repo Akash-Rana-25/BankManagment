@@ -1,22 +1,19 @@
 ﻿using BankManagment_Domain.Entity;
 using BankManagment_Infrastructure.Repository;
-using Services;
+using BankManagment_Services;
 using Moq;
-namespace BankManagement.UnitTests
-{
+using AutoFixture;
 
-    public class BankTransactionServiceTests
+namespace BankManagement.Services.UnitTests
+{
+    public class BankTransactionServiceTests : BaseTest
     {
         [Fact]
         public async Task GetAllBankTransactionsAsync_ReturnsBankTransactions()
         {
             // Arrange
             var mockBankTransactionRepository = new Mock<IRepository<BankTransaction>>();
-            var bankTransactions = new List<BankTransaction>
-        {
-            new BankTransaction { Id = Guid.NewGuid(), TransactionType = "Credit", Amount = 100 },
-            new BankTransaction { Id = Guid.NewGuid(), TransactionType = "Debit", Amount = 50 }
-        };
+            var bankTransactions = Fixture.CreateMany<BankTransaction>(2);
             mockBankTransactionRepository.Setup(repo => repo.GetAllAsync()).ReturnsAsync(bankTransactions);
 
             var service = new BankTransactionService(null, mockBankTransactionRepository.Object, null, null);
@@ -33,27 +30,24 @@ namespace BankManagement.UnitTests
         public async Task CreateBankTransactionAsync_CreatesNewBankTransaction()
         {
             // Arrange
+            var fixture = new Fixture();
             var mockBankTransactionRepository = new Mock<IRepository<BankTransaction>>();
             var mockBankAccountPostingRepository = new Mock<IRepository<BankAccountPosting>>();
             var mockBankAccountRepository = new Mock<IRepository<BankAccount>>();
 
-            var newBankTransaction = new BankTransaction
-            {
-                Id = Guid.NewGuid(),
-                TransactionType = "Credit",
-                Amount = 100,
-                Category = "Bank Interest",
-                PaymentMethodID = Guid.NewGuid(),
-                BankAccountID = Guid.NewGuid()
-            };
+            var newBankTransaction = fixture.Create<BankTransaction>();
+            newBankTransaction.Id = fixture.Create<Guid>();
+            newBankTransaction.TransactionType = "Credit";
+            newBankTransaction.Amount = 100;
+            newBankTransaction.Category = "Bank Interest";
+            newBankTransaction.PaymentMethodID = fixture.Create<Guid>();
+            newBankTransaction.BankAccountID = fixture.Create<Guid>();
 
             mockBankTransactionRepository.Setup(repo => repo.AddAsync(newBankTransaction)).Returns(Task.CompletedTask);
 
-            var existingBankAccount = new BankAccount
-            {
-                Id = newBankTransaction.BankAccountID,
-                TotalBalance = 200
-            };
+            var existingBankAccount = fixture.Create<BankAccount>();
+            existingBankAccount.Id = newBankTransaction.BankAccountID;
+            existingBankAccount.TotalBalance = 200;
 
             mockBankAccountRepository.Setup(repo => repo.GetByIdAsync(newBankTransaction.BankAccountID))
                 .ReturnsAsync(existingBankAccount);
@@ -69,21 +63,21 @@ namespace BankManagement.UnitTests
             Assert.Equal(300, existingBankAccount.TotalBalance);
         }
 
+
         [Fact]
         public async Task UpdateBankTransactionAsync_UpdatesExistingBankTransaction()
         {
             // Arrange
-            var bankTransactionId = Guid.NewGuid();
-            var updatedBankTransaction = new BankTransaction
-            {
-                Id = bankTransactionId,
-                TransactionType = "Debit",
-                Amount = 75
-            };
+            var bankTransactionId = Fixture.Create<Guid>();
+            var updatedBankTransaction = Fixture.Create<BankTransaction>();
 
             var mockBankTransactionRepository = new Mock<IRepository<BankTransaction>>();
             mockBankTransactionRepository.Setup(repo => repo.GetByIdAsync(bankTransactionId))
-                .ReturnsAsync(new BankTransaction());
+                .ReturnsAsync(updatedBankTransaction);
+
+            // Setup the UpdateAsync method
+            mockBankTransactionRepository.Setup(repo => repo.UpdateAsync(updatedBankTransaction))
+                .Returns(Task.CompletedTask);
 
             var service = new BankTransactionService(null, mockBankTransactionRepository.Object, null, null);
 
@@ -91,17 +85,19 @@ namespace BankManagement.UnitTests
             await service.UpdateBankTransactionAsync(bankTransactionId, updatedBankTransaction);
 
             // Assert
-            mockBankTransactionRepository.Verify(repo => repo.UpdateAsync(It.IsAny<BankTransaction>()), Times.Once);
+            mockBankTransactionRepository.Verify(repo => repo.UpdateAsync(updatedBankTransaction), Times.Once);
         }
+
 
         [Fact]
         public async Task DeleteBankTransactionAsync_DeletesExistingBankTransaction()
         {
             // Arrange
-            var bankTransactionId = Guid.NewGuid();
+            var bankTransactionId = Fixture.Create<Guid>();
 
             var mockBankTransactionRepository = new Mock<IRepository<BankTransaction>>();
-            mockBankTransactionRepository.Setup(repo => repo.GetByIdAsync(bankTransactionId)).ReturnsAsync(new BankTransaction());
+            mockBankTransactionRepository.Setup(repo => repo.GetByIdAsync(bankTransactionId))
+                .ReturnsAsync(Fixture.Create<BankTransaction>());
 
             var service = new BankTransactionService(null, mockBankTransactionRepository.Object, null, null);
 
@@ -112,5 +108,4 @@ namespace BankManagement.UnitTests
             mockBankTransactionRepository.Verify(repo => repo.DeleteAsync(It.IsAny<BankTransaction>()), Times.Once);
         }
     }
-
 }

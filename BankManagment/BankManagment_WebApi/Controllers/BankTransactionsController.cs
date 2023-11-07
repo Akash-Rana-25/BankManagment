@@ -2,8 +2,10 @@
 using BankManagment_Domain.Entity;
 using BankManagment_DTO;
 using Microsoft.AspNetCore.Mvc;
-using Services;
+using BankManagment_Services;
+using System.Web.Http;
 
+[RoutePrefix("api/banktransactions")]
 public class BankTransactionsController : Controller
 {
     private readonly IBankTransactionService _bankTransactionService;
@@ -15,7 +17,7 @@ public class BankTransactionsController : Controller
         _mapper = mapper;
     }
 
-    [HttpGet("banktransactions")]
+    [Microsoft.AspNetCore.Mvc.HttpGet("banktransactions")]
     public async Task<IActionResult> GetBankTransactions()
     {
         var bankTransactions = await _bankTransactionService.GetAllBankTransactionsAsync();
@@ -23,8 +25,8 @@ public class BankTransactionsController : Controller
         return Ok(bankTransactionDTOs);
     }
 
-    [HttpPost("banktransactions")]
-    public async Task<IActionResult> CreateBankTransaction([FromBody] BankTransactionDTO bankTransactionDTO)
+    [Microsoft.AspNetCore.Mvc.HttpPost("banktransactions")]
+    public async Task<IActionResult> CreateBankTransaction([Microsoft.AspNetCore.Mvc.FromBody] BankTransactionDTO bankTransactionDTO)
     {
         if (!ModelState.IsValid)
             return BadRequest();
@@ -38,8 +40,8 @@ public class BankTransactionsController : Controller
         return CreatedAtAction(nameof(GetBankTransactions), new { id = createdDTO.Id }, createdDTO);
     }
 
-    [HttpPut("banktransactions/{id}")]
-    public async Task<IActionResult> UpdateBankTransaction(Guid id, [FromBody] BankTransactionDTO updatedBankTransactionDTO)
+    [Microsoft.AspNetCore.Mvc.HttpPut("banktransactions/{id}")]
+    public async Task<IActionResult> UpdateBankTransaction(Guid id, [Microsoft.AspNetCore.Mvc.FromBody] BankTransactionDTO updatedBankTransactionDTO)
     {
         if (!ModelState.IsValid || id != updatedBankTransactionDTO.Id)
             return BadRequest();
@@ -52,7 +54,7 @@ public class BankTransactionsController : Controller
         return NoContent();
     }
 
-    [HttpDelete("banktransactions/{id}")]
+    [Microsoft.AspNetCore.Mvc.HttpDelete("banktransactions/{id}")]
     public async Task<IActionResult> DeleteBankTransaction(Guid id)
     {
         await _bankTransactionService.DeleteBankTransactionAsync(id);

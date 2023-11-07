@@ -2,54 +2,56 @@
 using BankManagment_Domain.Entity;
 using BankManagment_Infrastructure.Repository;
 using BankManagment_Infrastructure.UnitOfWork;
-using Services;
-
-public class BankAccountService : IBankAccountService
+namespace BankManagment_Services
 {
-    private readonly IRepository<BankAccount> _bankAccountRepository;
-    private readonly IUnitOfWork _unitOfWork;
 
-    public BankAccountService(IUnitOfWork unitOfWork, IRepository<BankAccount> bankAccountRepository)
+    public class BankAccountService : IBankAccountService
     {
-        _unitOfWork = unitOfWork;
-        _bankAccountRepository = bankAccountRepository;
-    }
+        private readonly IRepository<BankAccount> _bankAccountRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
-    public async Task<IEnumerable<BankAccount>> GetAllBankAccountsAsync()
-    {
-        return await _bankAccountRepository.GetAllAsync();
-    }
+        public BankAccountService(IUnitOfWork unitOfWork, IRepository<BankAccount> bankAccountRepository)
+        {
+            _unitOfWork = unitOfWork;
+            _bankAccountRepository = bankAccountRepository;
+        }
 
-    public async Task CreateBankAccountAsync(BankAccount bankAccount)
-    {
-        await _bankAccountRepository.AddAsync(bankAccount);
-    }
+        public Task<IEnumerable<BankAccount>> GetAllBankAccountsAsync()
+        {
+            return _bankAccountRepository.GetAllAsync();
+        }
 
-    public async Task UpdateBankAccountAsync(Guid id, BankAccount updatedBankAccount)
-    {
-        var existingBankAccount = await _bankAccountRepository.GetByIdAsync(id);
-        if (existingBankAccount == null)
-            throw new ArgumentException("Bank account not found.");
+        public async Task CreateBankAccountAsync(BankAccount bankAccount)
+        {
+            await _bankAccountRepository.AddAsync(bankAccount);
+        }
 
-        existingBankAccount.FirstName = updatedBankAccount.FirstName;
-        existingBankAccount.MiddleName = updatedBankAccount.MiddleName;
-        existingBankAccount.LastName = updatedBankAccount.LastName;
-        existingBankAccount.ClosingDate = updatedBankAccount.ClosingDate;
+        public async Task UpdateBankAccountAsync(Guid id, BankAccount updatedBankAccount)
+        {
+            var existingBankAccount = await _bankAccountRepository.GetByIdAsync(id);
+            if (existingBankAccount == null)
+                throw new ArgumentException("Bank account not found.");
 
-        await _bankAccountRepository.UpdateAsync(existingBankAccount);
-    }
+            existingBankAccount.FirstName = updatedBankAccount.FirstName;
+            existingBankAccount.MiddleName = updatedBankAccount.MiddleName;
+            existingBankAccount.LastName = updatedBankAccount.LastName;
+            existingBankAccount.ClosingDate = updatedBankAccount.ClosingDate;
 
-    public async Task DeleteBankAccountAsync(Guid id)
-    {
-        var bankAccount = await _bankAccountRepository.GetByIdAsync(id);
-        if (bankAccount == null)
-            throw new ArgumentException("Bank account not found.");
+            await _bankAccountRepository.UpdateAsync(existingBankAccount);
+        }
 
-        await _bankAccountRepository.DeleteAsync(bankAccount);
-    }
+        public async Task DeleteBankAccountAsync(Guid id)
+        {
+            var bankAccount = await _bankAccountRepository.GetByIdAsync(id);
+            if (bankAccount == null)
+                throw new ArgumentException("Bank account not found.");
 
-    public async Task SaveChangesAsync()
-    {
-        await _unitOfWork.SaveAsync();
+            await _bankAccountRepository.DeleteAsync(bankAccount);
+        }
+
+        public async Task SaveChangesAsync()
+        {
+            await _unitOfWork.SaveAsync();
+        }
     }
 }

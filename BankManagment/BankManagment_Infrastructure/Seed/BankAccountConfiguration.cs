@@ -2,11 +2,6 @@
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BankManagment_Infrastructure.Seed
 {
@@ -36,8 +31,7 @@ namespace BankManagment_Infrastructure.Seed
                         LastName = "Rana",
                         AccountNumber = GenerateRandomAccountNumber(),
                         OpeningDate = DateTime.Now.AddDays(-i),
-                        AccountTypeId = GetRandomAccountTypeId(accountTypeIds, random),
-                        TotalBalance = 1000
+                        AccountTypeId = GetRandomAccountTypeId(accountTypeIds, random)
                     })
                     .ToArray();
 

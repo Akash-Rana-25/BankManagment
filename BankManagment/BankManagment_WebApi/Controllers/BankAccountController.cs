@@ -1,13 +1,13 @@
 ﻿using AutoMapper;
 using BankManagment_Domain.Entity;
 using BankManagment_DTO;
+using BankManagment_Services;
 using Microsoft.AspNetCore.Mvc;
-using Services;
+using System.Web.Http;
 
-namespace BankManagment_WebApi.Controllers
-{
+[RoutePrefix("api/bankaccounts")]
     public class BankAccountController : Controller
-    {
+{
         private readonly IBankAccountService _bankAccountService;
         private readonly IMapper _mapper;
 
@@ -16,7 +16,7 @@ namespace BankManagment_WebApi.Controllers
             _bankAccountService = bankAccountService;
             _mapper = mapper;
         }
-        [HttpGet("bankaccounts")]
+        [Microsoft.AspNetCore.Mvc.HttpGet("bankaccounts")]
         public async Task<IActionResult> GetBankAccounts()
         {
             var bankAccounts = await _bankAccountService.GetAllBankAccountsAsync();
@@ -24,8 +24,8 @@ namespace BankManagment_WebApi.Controllers
             return Ok(bankAccountDTOs);
         }
 
-        [HttpPost("bankaccounts")]
-        public async Task<IActionResult> CreateBankAccount([FromBody] BankAccountDTO bankAccountDTO)
+        [Microsoft.AspNetCore.Mvc.HttpPost("bankaccounts")]
+        public async Task<IActionResult> CreateBankAccount([Microsoft.AspNetCore.Mvc.FromBody] BankAccountDTO bankAccountDTO)
         {
             if (!ModelState.IsValid)
                 return BadRequest();
@@ -39,8 +39,8 @@ namespace BankManagment_WebApi.Controllers
             return CreatedAtAction(nameof(GetBankAccounts), new { id = createdDTO.Id }, createdDTO);
         }
 
-        [HttpPut("bankaccounts/{id}")]
-        public async Task<IActionResult> UpdateBankAccount(Guid id, [FromBody] BankAccountDTO updatedBankAccountDTO)
+        [Microsoft.AspNetCore.Mvc.HttpPut("bankaccounts/{id}")]
+        public async Task<IActionResult> UpdateBankAccount(Guid id, [Microsoft.AspNetCore.Mvc.FromBody] BankAccountDTO updatedBankAccountDTO)
         {
             if (!ModelState.IsValid || id != updatedBankAccountDTO.Id)
                 return BadRequest();
@@ -53,7 +53,7 @@ namespace BankManagment_WebApi.Controllers
             return NoContent();
         }
 
-        [HttpDelete("bankaccounts/{id}")]
+        [Microsoft.AspNetCore.Mvc.HttpDelete("bankaccounts/{id}")]
         public async Task<IActionResult> DeleteBankAccount(Guid id)
         {
             await _bankAccountService.DeleteBankAccountAsync(id);
@@ -63,4 +63,4 @@ namespace BankManagment_WebApi.Controllers
         }
     }
 
-}
+

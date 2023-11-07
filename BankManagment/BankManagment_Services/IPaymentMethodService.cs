@@ -1,6 +1,6 @@
 ﻿using BankManagment_Domain.Entity;
 
-namespace Services
+namespace BankManagment_Services
 {
     public interface IPaymentMethodService
     {
