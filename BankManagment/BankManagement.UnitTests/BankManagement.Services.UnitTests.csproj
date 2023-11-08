@@ -37,8 +37,4 @@
     <ProjectReference Include="..\BankManagment_WebApi\BankManagment_WebApi.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="ControllerUnitTests\" />
-  </ItemGroup>
-
 </Project>

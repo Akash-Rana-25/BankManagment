@@ -22,6 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\BankManagement.MiddlewareLibrary\BankManagement.MiddlewareLibrary.csproj" />
     <ProjectReference Include="..\BankManagment_DependencyInjectionExtensions\BankManagment_DependencyInjectionExtensions.csproj" />
     <ProjectReference Include="..\BankManagment_DTO\BankManagment_DTO.csproj" />
     <ProjectReference Include="..\BankManagment_Infrastructure\BankManagment_Infrastructure.csproj" />

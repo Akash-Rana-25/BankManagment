@@ -38,25 +38,10 @@ if (app.Environment.IsDevelopment())
 }
 else
 {
-    // Use the exception handler middleware for non-development environments.
-    app.UseExceptionHandler(errorApp =>
+    if (!app.Environment.IsDevelopment())
     {
-        errorApp.Run(async context =>
-        {
-            var exceptionHandlerPathFeature = context.Features.Get<IExceptionHandlerPathFeature>();
-            var exception = exceptionHandlerPathFeature.Error;
-
-            context.Response.ContentType = "application/json";
-            context.Response.StatusCode = 500; // Internal Server Error
-
-            // Return an error response to the client.
-            await context.Response.WriteAsync(JsonConvert.SerializeObject(new
-            {
-                message = "An error occurred.",
-                exception = exception.Message 
-            }));
-        });
-    });
+        app.UseMiddleware<ExceptionHandlerMiddleware>();
+    }
 }
 
 app.UseHttpsRedirection();
