@@ -1,6 +1,7 @@
 ﻿using BankManagment_Domain.Entity;
 using BankManagment_Infrastructure.Repository;
 using BankManagment_Infrastructure.UnitOfWork;
+using Serilog;
 
 namespace BankManagment_Services
 {
@@ -10,6 +11,8 @@ namespace BankManagment_Services
         private readonly IRepository<BankAccountPosting> _bankAccountPostingRepository;
         private readonly IRepository<BankAccount> _bankAccountRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ILogger _logger;
+
 
         public BankTransactionService(IUnitOfWork unitOfWork,
                                       IRepository<BankTransaction> bankTransactionRepository,
@@ -20,10 +23,12 @@ namespace BankManagment_Services
             _bankTransactionRepository = bankTransactionRepository;
             _bankAccountPostingRepository = bankAccountPostingRepository;
             _bankAccountRepository = bankAccountRepository;
+            _logger=Log.ForContext<BankTransactionService>();
         }
 
         public  Task<IEnumerable<BankTransaction>> GetAllBankTransactionsAsync()
         {
+            _logger.Information("Geting All Bank Transaction");
             return _bankTransactionRepository.GetAllAsync();
         }
 
@@ -32,9 +37,10 @@ namespace BankManagment_Services
            
             if (_bankTransactionRepository == null || _bankAccountPostingRepository == null || _bankAccountRepository == null)
             {
+                _logger.Error("Repositories not properly initialized.");
                 throw new InvalidOperationException("Repositories not properly initialized.");
             }
-
+            _logger.Information("Transaction Created");
             await _bankTransactionRepository.AddAsync(bankTransaction);
 
             if (bankTransaction.Category == "Bank Interest" || bankTransaction.Category == "Bank Charges")
@@ -51,7 +57,7 @@ namespace BankManagment_Services
                     PaymentMethodID = bankTransaction.PaymentMethodID,
                     BankAccountID = bankTransaction.BankAccountID
                 };
-
+                _logger.Information("Transaction Created For Bank Acoount Posting");
                 await _bankAccountPostingRepository.AddAsync(bankAccountPosting);
             }
 
@@ -66,6 +72,7 @@ namespace BankManagment_Services
                 {
                     bankAccount.TotalBalance -= bankTransaction.Amount;
                 }
+                _logger.Information("Total Balance Updated");
                 await _bankAccountRepository.UpdateAsync(bankAccount);
             }
         }
@@ -74,7 +81,11 @@ namespace BankManagment_Services
         {
             var existingBankTransaction = await _bankTransactionRepository.GetByIdAsync(id);
             if (existingBankTransaction == null)
-                throw new ArgumentException("Bank transaction not found.");
+            {
+                _logger.Error($"Bank transaction not found for Id{id}");
+                throw new ArgumentException("Bank transaction not found."); 
+            }
+               
 
             existingBankTransaction.TransactionPersonFirstName = updatedBankTransaction.TransactionPersonFirstName;
             existingBankTransaction.TransactionPersonMiddleName = updatedBankTransaction.TransactionPersonMiddleName;
@@ -84,20 +95,24 @@ namespace BankManagment_Services
             existingBankTransaction.Amount = updatedBankTransaction.Amount;
             existingBankTransaction.TransactionDate = updatedBankTransaction.TransactionDate;
 
+            _logger.Information($"Bank Transaction Updated For Id {id}");
             await _bankTransactionRepository.UpdateAsync(existingBankTransaction);
         }
 
         public async Task DeleteBankTransactionAsync(Guid id)
         {
             var bankTransaction = await _bankTransactionRepository.GetByIdAsync(id);
-            if (bankTransaction == null)
+            if (bankTransaction == null) {
+                _logger.Error($"Bank Transaction Not Found For Id {id}");
                 throw new ArgumentException("Bank transaction not found.");
-
+            }
+            _logger.Information($"Delete bank transaction for Id {id}");
             await _bankTransactionRepository.DeleteAsync(bankTransaction);
         }
 
         public async Task SaveChangesAsync()
         {
+            _logger.Information("Saving Changes");
             await _unitOfWork.SaveAsync();
         }
     }
